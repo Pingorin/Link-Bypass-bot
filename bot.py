@@ -1,12 +1,11 @@
 import logging
 import requests
 from pyrogram import Client, filters
-from info import API_ID, API_HASH, BOT_TOKEN
+from info import API_ID, API_HASH, BOT_TOKEN, START_IMAGE
 
 logging.basicConfig(level=logging.INFO)
 
 # Pyrogram Client Setup
-# API_ID ko integer (int) mein convert karna zaroori hai
 bot_client = Client(
     "link_bypass_bot",
     api_id=int(API_ID) if API_ID else 0,
@@ -16,10 +15,17 @@ bot_client = Client(
 
 @bot_client.on_message(filters.command("start"))
 async def start_command(client, message):
-    await message.reply_text(
-        "👋 Hello! Main deploy ho chuka hoon.\n"
-        "Mujhe koi link bhejo, main usko check karunga."
-    )
+    caption_text = "Link bypass Bot live"
+    
+    # Try block lagaya hai taaki agar image URL invalid ho toh bot crash na ho
+    try:
+        await message.reply_photo(
+            photo=START_IMAGE,
+            caption=caption_text
+        )
+    except Exception as e:
+        # Agar image load hone mein koi dikkat aaye, toh sirf text bhej dega
+        await message.reply_text(f"{caption_text}")
 
 @bot_client.on_message(filters.text & ~filters.command(["start"]))
 async def bypass_handler(client, message):
