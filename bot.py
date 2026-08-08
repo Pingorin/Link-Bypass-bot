@@ -1,6 +1,5 @@
 import logging
 import requests
-import asyncio
 from pyrogram import Client, filters
 from info import API_ID, API_HASH, BOT_TOKEN, START_IMAGE
 
@@ -58,17 +57,11 @@ async def bypass_handler(client, message):
         await msg.edit_text(f"❌ Error aaya: {str(e)}")
 
 # ==========================================
-# ASYNC LOOP HANDLER (FIXED)
+# START BOT
 # ==========================================
-def start_bot_sync():
-    """Yeh function thread ke andar bot ko safely run karega"""
+if __name__ == "__main__":
     logger.info("Initializing Telegram Bot...")
     try:
-        # 🔥 FIX: Naye thread ke liye naya event loop banana zaroori hai
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        # Ab bot safely is naye loop me run karega
         bot_client.run()
     except Exception as e:
         logger.error(f"Bot failed to start: {e}")
