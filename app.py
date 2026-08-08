@@ -1,54 +1,39 @@
 import threading
-import asyncio
 import gradio as gr
 import spaces
-from bot import start_telegram_bot
+from bot import start_bot_sync
 from info import API_ID, API_HASH, BOT_TOKEN
 
 # ==========================================
-# GPU HEALTH CHECK FIX
+# GPU HEALTH CHECK
 # ==========================================
 @spaces.GPU(timeout=5)
 def satisfy_hf_gpu_check():
-    print("✅ Hugging Face GPU Check satisfied by dummy function.")
-    return "Hugging Face GPU environment detected and active."
-
-# ==========================================
-# ISOLATED BACKGROUND BOT LAUNCHER
-# ==========================================
-def run_bot_in_background():
-    # Naya event loop banaya
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
-    # Bot ko start karne ka function call kiya (yeh function ab event loop ko block nahi karega)
-    start_telegram_bot()
-    
-    # Event loop ko hamesha chalte rehne dene ke liye run_forever lagaya
-    try:
-        loop.run_forever()
-    except Exception as e:
-        print(f"Loop Error: {e}")
+    print("✅ GPU environment verified by Hugging Face.")
+    return "GPU is active and Bot is listening..."
 
 # ==========================================
 # START BOT THREAD
 # ==========================================
 if API_ID and API_HASH and BOT_TOKEN:
-    # Daemon thread banakar bot ko start kiya
-    bot_thread = threading.Thread(target=run_bot_in_background, daemon=True)
+    # Thread banakar bot.py ke function ko call kiya
+    # daemon=True ka matlab hai jab HF app band ho, toh thread bhi band ho jaye
+    bot_thread = threading.Thread(target=start_bot_sync, daemon=True)
     bot_thread.start()
-    print("✅ Bot thread started successfully in background.")
+    print("✅ Bot thread launched successfully.")
 else:
-    print("⚠️ API Variables missing hain! Fallback values or secrets needed.")
+    print("⚠️ API Variables missing! Cannot start bot.")
 
 # ==========================================
-# GRADIO UI
+# GRADIO UI (Runs on Main Thread)
 # ==========================================
 with gr.Blocks() as demo:
     gr.Markdown("# 🤖 Telegram Link Bypass Bot - GPU Instance")
-    gr.Markdown("Yeh Space GPU par chal raha hai. Bot background mein active hai.")
+    gr.Markdown("Bot is running in the background. Use it on Telegram.")
     status = gr.Textbox(label="Status", value="Initializing...")
+    
+    # HF GPU ko verify karne ke liye function load
     demo.load(fn=satisfy_hf_gpu_check, outputs=status)
 
-# Launch ko end mein rakha aur prevent_thread_lock=True nahi lagaya kyunki HF ko block chahiye
+# Isko last mein hi rakhna hai
 demo.launch(server_name="0.0.0.0", server_port=7860)
