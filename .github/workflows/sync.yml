@@ -1,0 +1,25 @@
+name: Sync to Hugging Face Hub
+
+on:
+  push:
+    branches: [main] # Agar aapki branch ka naam 'master' hai, toh ise 'master' kar dein
+  workflow_dispatch: # Yeh aapko manually GitHub se action run karne ki suvidha deta hai
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+      
+      - name: Push to Hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }} # Is secret ko GitHub mein add karna hoga
+        run: |
+          # Niche apna Hugging Face username aur Space name replace karein
+          git remote add space https://huggingface.co/spaces/Himi05/Link_bypass
+          
+          # Force push karne ke liye (yeh username:token format use karega auth ke liye)
+          git push --force https://Himi05:$HF_TOKEN@huggingface.co/spaces/Himi05/Link_bypass main
