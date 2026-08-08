@@ -6,25 +6,25 @@ from info import API_ID, API_HASH, BOT_TOKEN, START_IMAGE
 logging.basicConfig(level=logging.INFO)
 
 # Pyrogram Client Setup
+# Yahan 'in_memory=True' add kiya gaya hai taaki HF par storage errors na aaye
 bot_client = Client(
     "link_bypass_bot",
     api_id=int(API_ID) if API_ID else 0,
     api_hash=API_HASH,
-    bot_token=BOT_TOKEN
+    bot_token=BOT_TOKEN,
+    in_memory=True
 )
 
 @bot_client.on_message(filters.command("start"))
 async def start_command(client, message):
     caption_text = "Link bypass Bot live"
     
-    # Try block lagaya hai taaki agar image URL invalid ho toh bot crash na ho
     try:
         await message.reply_photo(
             photo=START_IMAGE,
             caption=caption_text
         )
     except Exception as e:
-        # Agar image load hone mein koi dikkat aaye, toh sirf text bhej dega
         await message.reply_text(f"{caption_text}")
 
 @bot_client.on_message(filters.text & ~filters.command(["start"]))
@@ -49,7 +49,6 @@ async def bypass_handler(client, message):
     except Exception as e:
         await msg.edit_text(f"❌ Error aaya: {str(e)}")
 
-# Yeh function app.py se call hoga bot ko start karne ke liye
 def start_telegram_bot():
     print("Starting Telegram Bot...")
     bot_client.run()
