@@ -1,46 +1,54 @@
 import threading
 import asyncio
 import gradio as gr
-import spaces  # <--- Naya import, GPU hardware manage karne ke liye
+import spaces
 from bot import start_telegram_bot
 from info import API_ID, API_HASH, BOT_TOKEN
 
 # ==========================================
-# GPU HEALTH CHECK FIX (Critical for GPU Space)
+# GPU HEALTH CHECK FIX
 # ==========================================
-# Yeh decorator Hugging Face ko batata hai ki yeh function GPU use karta hai.
-# Bhale hi hum isme kuch heavy kaam na karein, ise call karna runtime error ko rokega.
-@spaces.GPU(timeout=5) # 5 second ka timeout bohot hai dummy function ke liye
+@spaces.GPU(timeout=5)
 def satisfy_hf_gpu_check():
     print("✅ Hugging Face GPU Check satisfied by dummy function.")
     return "Hugging Face GPU environment detected and active."
 
-# Background mein bot run karne ka function (Already existing)
+# ==========================================
+# ISOLATED BACKGROUND BOT LAUNCHER
+# ==========================================
 def run_bot_in_background():
+    # Naya event loop banaya
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+    
+    # Bot ko start karne ka function call kiya (yeh function ab event loop ko block nahi karega)
     start_telegram_bot()
+    
+    # Event loop ko hamesha chalte rehne dene ke liye run_forever lagaya
+    try:
+        loop.run_forever()
+    except Exception as e:
+        print(f"Loop Error: {e}")
 
-# Bot ko thread mein start karein (Already existing)
+# ==========================================
+# START BOT THREAD
+# ==========================================
 if API_ID and API_HASH and BOT_TOKEN:
-    threading.Thread(target=run_bot_in_background, daemon=True).start()
+    # Daemon thread banakar bot ko start kiya
+    bot_thread = threading.Thread(target=run_bot_in_background, daemon=True)
+    bot_thread.start()
+    print("✅ Bot thread started successfully in background.")
 else:
     print("⚠️ API Variables missing hain! Fallback values or secrets needed.")
 
 # ==========================================
-# GRADIO UI WITH AUTO-LOAD FIX
+# GRADIO UI
 # ==========================================
 with gr.Blocks() as demo:
     gr.Markdown("# 🤖 Telegram Link Bypass Bot - GPU Instance")
     gr.Markdown("Yeh Space GPU par chal raha hai. Bot background mein active hai.")
-    
-    # Ek status text box jisme dummy output dikhega
     status = gr.Textbox(label="Status", value="Initializing...")
-
-    # .load() method use karke, jaise hi application start hogi,
-    # hum satisfy_hf_gpu_check() function ko call karenge.
-    # Isse Hugging Face detect kar lega ki GPU function run hua hai.
     demo.load(fn=satisfy_hf_gpu_check, outputs=status)
 
-# Hugging face default port 7860 par app launch karega
+# Launch ko end mein rakha aur prevent_thread_lock=True nahi lagaya kyunki HF ko block chahiye
 demo.launch(server_name="0.0.0.0", server_port=7860)
