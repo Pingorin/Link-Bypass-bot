@@ -23,7 +23,7 @@ async def start_command(client, message):
         await message.reply_photo(photo=START_IMAGE, caption=caption_text)
     except Exception as e:
         logger.error(f"Image Error: {e}")
-        await message.reply_text(f"{caption_text}")
+        await message.reply_text(caption_text)
 
 @bot_client.on_message(filters.text & ~filters.command(["start"]))
 async def bypass_handler(client, message):
@@ -49,7 +49,7 @@ async def bypass_handler(client, message):
             await msg.edit_text(
                 f"✅ **Process Complete!**\n\n"
                 f"🔗 **Original:** `{url}`\n\n"
-                f"🚀 **Bypassed (Final Destination):** `{final_url}`",
+                f"🚀 **Bypassed:** `{final_url}`",
                 disable_web_page_preview=True
             )
     except requests.exceptions.Timeout:
@@ -58,13 +58,17 @@ async def bypass_handler(client, message):
         await msg.edit_text(f"❌ Error aaya: {str(e)}")
 
 # ==========================================
-# ASYNC LOOP HANDLER
+# ASYNC LOOP HANDLER (FIXED)
 # ==========================================
 def start_bot_sync():
     """Yeh function thread ke andar bot ko safely run karega"""
     logger.info("Initializing Telegram Bot...")
     try:
-        # .run() automatically event loop create aur manage karta hai
+        # 🔥 FIX: Naye thread ke liye naya event loop banana zaroori hai
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        # Ab bot safely is naye loop me run karega
         bot_client.run()
     except Exception as e:
         logger.error(f"Bot failed to start: {e}")
