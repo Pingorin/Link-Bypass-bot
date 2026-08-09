@@ -3,3 +3,4 @@ tgcrypto
 requests
 gradio
 spaces
+beautifulsoup4
