@@ -209,7 +209,7 @@ async def check_verification(client, user_id, chat_id, link_id, message_obj):
 
     if mode == 'together':
         buttons = []
-        info_text = "⚠️ **Verification Required**\n\nComplete the steps below to access files:\n"
+        info_text = "⚠️️ **Verification Required**\n\nComplete the steps below to access files:\n"
         wait_msg = await message_obj.reply_text("Generating Verification Links... ⏳")
         
         if active_slots.get('1') and await db.get_level_time(user_id, chat_id, 1) == 0:
@@ -358,7 +358,7 @@ async def attempt_send_link(client, user_id, chat_id, link_id, message_obj, leve
         return "SENT"
     else:
         await send_shortener_alert(client, chat_id, site)
-        await message_obj.reply_text(f"⚠️ **Alert:** Shortener {site} failed or returned invalid link. Check API.")
+        await message_obj.reply_text(f"⚠️️ **Alert:** Shortener {site} failed or returned invalid link. Check API.")
         return "SKIP"
 
 # ==============================================================================
@@ -1463,7 +1463,7 @@ async def show_groups_page(client, request_obj, page):
         nav_row.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"admin_grp_page#{page-1}"))
     nav_row.append(InlineKeyboardButton(f"{page+1}/{max_pages}", callback_data="ignore"))
     if page < max_pages - 1:
-        nav_row.append(InlineKeyboardButton("Next ➡️", callback_data=f"admin_grp_page#{page+1}"))
+        nav_row.append(InlineKeyboardButton("Next ➡️️", callback_data=f"admin_grp_page#{page+1}"))
         
     if nav_row:
         buttons.append(nav_row)
@@ -1782,7 +1782,7 @@ async def remove_specific_sticker_cmd(client, message):
         await db.update_group_settings(message.chat.id, {'result_stickers': new_list})
         await message.reply(f"🗑️ **Sticker Removed!**\nAb ye sticker search results mein nahi aayega.\n(Bache hue stickers: {len(new_list)}/5)")
     else:
-        await message.reply("⚠️ Ye sticker aapki bot ki list mein add hi nahi hai.")
+        await message.reply("⚠️️ Ye sticker aapki bot ki list mein add hi nahi hai.")
 
 # ==============================================================================
 # 🚀 SUPER FAST START MENU BUTTONS (Features, Earn, Referral, Back)
@@ -1792,7 +1792,7 @@ async def remove_specific_sticker_cmd(client, message):
 async def features_callback(client, query):
     await query.answer() 
     text = (
-        "⚙️ **Bot Features:**\n\n"
+        "⚙️️ **Bot Features:**\n\n"
         "✓ Auto Filter in Groups\n"
         "✓ Super Fast Search Engine\n"
         "✓ Multi-Database Architecture\n"
@@ -2154,3 +2154,18 @@ async def ref_ids_back(client, query):
 async def stop_refresh_handler(client, query):
     temp.STOP_REFRESH = True
     await query.answer("🛑 Stopping process and saving progress... Please wait 2 seconds.", show_alert=True)
+
+# ==============================================================================
+# 🧹 ADMIN COMMAND: CLEAR SEARCH CACHE
+# ==============================================================================
+@Client.on_message(filters.command("clearcache") & filters.user(ADMINS))
+async def clear_cache_cmd(client, message):
+    msg = await message.reply("🗑️ **Clearing Database Cache...**\n_Please wait..._")
+    try:
+        # Dono cache collections ko khali kar dega
+        await Media.temp_searches.delete_many({})
+        await Media.search_cache.delete_many({})
+        
+        await msg.edit("✅ **Cache Cleared Successfully!**\n\nAb 'Toxic 2026' search karke dekhein, bot ekdum naya aur fresh logic use karega.")
+    except Exception as e:
+        await msg.edit(f"❌ **Error:** {e}")
