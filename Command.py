@@ -1551,7 +1551,7 @@ async def get_grp_link_handler(client, query):
 @Client.on_message(filters.command("addpremium") & filters.user(ADMINS))
 async def add_premium_cmd(client, message):
     if len(message.command) != 3:
-        return await message.reply("⚠️ **Sahi syntax:** `/addpremium [User_ID] [Days]`\n\nExample: `/addpremium 1729007340 365`")
+        return await message.reply("⚠️️ **Sahi syntax:** `/addpremium [User_ID] [Days]`\n\nExample: `/addpremium 1729007340 365`")
 
     try:
         target_id = int(message.command[1])
@@ -2154,3 +2154,18 @@ async def ref_ids_back(client, query):
 async def stop_refresh_handler(client, query):
     temp.STOP_REFRESH = True
     await query.answer("🛑 Stopping process and saving progress... Please wait 2 seconds.", show_alert=True)
+
+# ==============================================================================
+# 🧹 ADMIN COMMAND: CLEAR SEARCH CACHE
+# ==============================================================================
+@Client.on_message(filters.command("clearcache") & filters.user(ADMINS))
+async def clear_cache_cmd(client, message):
+    msg = await message.reply("🗑️ **Clearing Database Cache...**\n_Please wait..._")
+    try:
+        # Dono cache collections ko khali kar dega
+        await Media.temp_searches.delete_many({})
+        await Media.search_cache.delete_many({})
+        
+        await msg.edit("✅ **Cache Cleared Successfully!**\n\nAb 'Toxic 2026' search karke dekhein, bot ekdum naya aur fresh logic use karega.")
+    except Exception as e:
+        await msg.edit(f"❌ **Error:** {e}")
